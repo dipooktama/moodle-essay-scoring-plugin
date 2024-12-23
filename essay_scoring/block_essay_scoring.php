@@ -21,6 +21,9 @@
  * @copyright   2024 dipo <dipooktama@usu.ac.id>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 class block_essay_scoring extends block_base {
 
     /**
@@ -43,26 +46,19 @@ class block_essay_scoring extends block_base {
             return $this->content;
         }
 
-        /*
+        
         if (empty($this->instance)) {
             $this->content = '';
             return $this->content;
         }
-         */
 
         $this->content = new stdClass();
         $url = new moodle_url('/blocks/essay_scoring/scoring.php', ['courseid'=> $COURSE->id]);
-
-        if (!empty($this->config->text)) {
-            $this->content->text = $this->config->text;
-        } else {
-            this->content->text = html_writer::link(
-                $url, 
-                get_string('viewscoring', 'block_essay_scoring'), 
-                ['class' => 'btn btn-primary']
-            );
-        }
-        $this->content->footer = 'PSI USU';
+        $this->content->text = html_writer::link(
+            $url, 
+            get_string('viewscoring', 'block_essay_scoring'), 
+            ['class' => 'btn btn-primary']
+        );
 
         return $this->content;
     }

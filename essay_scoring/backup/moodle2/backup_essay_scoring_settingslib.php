@@ -15,17 +15,13 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Plugin custom settings are defined here.
  *
  * @package     block_essay_scoring
+ * @category    backup
  * @copyright   2024 dipo <dipooktama@usu.ac.id>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'block_essay_scoring';
-$plugin->release = '0.1.1';
-$plugin->version = 2024122318;
-$plugin->requires = 2022112800;
-$plugin->maturity = MATURITY_ALPHA;
+// More information about the backup process: {@link https://docs.moodle.org/dev/Backup_API}.
+// More information about the restore process: {@link https://docs.moodle.org/dev/Restore_API}.

@@ -25,8 +25,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$settings->add(new admin_setting_configtext(
+    'block_essay_scoring/apiendpoint',
+    get_string('apiendpoint', 'block_essay_scoring'),
+    get_string('apiendpoint_desc', 'block_essay_scoring'),
+    '',
+    PARAM_URL
+));
+
+/*
+
+
 if ($hassiteconfig) {
-    $settings = new admin_settingpage('block_essay_scoring_settings', new lang_string('pluginname', 'block_essay_scoring'));
+    # $settings = new admin_settingpage('block_essay_scoring_settings', new lang_string('pluginname', 'block_essay_scoring'));
 
     // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf
     if ($ADMIN->fulltree) {
@@ -34,8 +45,9 @@ if ($hassiteconfig) {
             'block_essay_scoring/apiendpoint',
             get_string('apiendpoint', 'block_essay_scoring'),
             get_string('apiendpoint_desc', 'block_essay_scoring'),
-            '', // default value
+            '',
             PARAM_URL
         ));
     }
 }
+ */
