@@ -37,27 +37,32 @@ class block_essay_scoring extends block_base {
      * @return stdClass The block contents.
      */
     public function get_content() {
+        global $COURSE;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
+        /*
         if (empty($this->instance)) {
             $this->content = '';
             return $this->content;
         }
+         */
 
         $this->content = new stdClass();
-        $this->content->items = array();
-        $this->content->icons = array();
-        $this->content->footer = '';
+        $url = new moodle_url('/blocks/essay_scoring/scoring.php', ['courseid'=> $COURSE->id]);
 
         if (!empty($this->config->text)) {
             $this->content->text = $this->config->text;
         } else {
-            $text = 'Please define the content text in /blocks/essay_scoring/block_essay_scoring.php.';
-            $this->content->text = $text;
+            this->content->text = html_writer::link(
+                $url, 
+                get_string('viewscoring', 'block_essay_scoring'), 
+                ['class' => 'btn btn-primary']
+            );
         }
+        $this->content->footer = 'PSI USU';
 
         return $this->content;
     }

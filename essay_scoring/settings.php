@@ -30,6 +30,12 @@ if ($hassiteconfig) {
 
     // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf
     if ($ADMIN->fulltree) {
-        // TODO: Define actual plugin settings page and add it to the tree - {@link https://docs.moodle.org/dev/Admin_settings}.
+        $settings->add(new admin_setting_configtext(
+            'block_essay_scoring/apiendpoint',
+            get_string('apiendpoint', 'block_essay_scoring'),
+            get_string('apiendpoint_desc', 'block_essay_scoring'),
+            '', // default value
+            PARAM_URL
+        ));
     }
 }
