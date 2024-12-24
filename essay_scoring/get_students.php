@@ -61,7 +61,7 @@ if($action == 'loadstudent') {
     // Group results by student and quiz
     $grouped_results = array();
     foreach ($results as $result) {
-        $key = $result->user_id . '_' . $result->quiz_id . '_' . $result->id;
+        $key = $result->user_id . '_' . $result->quiz_id;
         if (!isset($grouped_results[$key])) {
             $grouped_results[$key] = array(
                 'user_id' => $result->user_id,
@@ -74,38 +74,38 @@ if($action == 'loadstudent') {
             );
         }
         $grouped_results[$key]['questions'][] = array(
-            'question' => $result->questiontext,
+            'question' => $result->question_text,
             'answer' => $result->student_answer,
             'context' => $result->context
         );
     }
 
     $dataToBePassed = array();
-    foreach ($results as $key => $data) {
-        $dataToBePassed[$key] = array(
-            'quiz_id' => $data->quiz_id,
-            'user_id' => $data->user_id,
-            'context' => '',
-            'questions_answers' => array()
-        );
-        $mergeContext = '';
-        foreach($data['questions'] as $item) {
-            $dataToBePassed[$key]['questions'][] = array(
-                'question' => $item->question,
-                'answer' => $item->answer
+    foreach ($grouped_results as $key => $data) {
+        if (!isset($dataToBePassed[$key])) {
+            $dataToBePassed[$key] = array(
+                'quiz_id' => $data['quiz_id'],
+                'user_id' => $data['user_id'],
+                'context' => '',
+                'questions_answers' => array()
             );
-            $mergeContext = $mergeContext + "\n" + $item->context;
         }
-        $dataToBepassed[$key]['context'] = $mergeContext;
+    
+        foreach($data['questions'] as $item) {
+            $dataToBePassed[$key]['questions_answers'][] = array(
+                'question' => $item['question'],
+                'answer' => $item['answer']
+            );
+            $dataToBePassed[$key]['context'] .= "\n" . $item['context'];
+        }
     }
 
-    foreach ($results as $key1=>$result) {
-        foreach ($dataToBePassed as $key2=>$data) {
-            if($key1 == $key2) {
-                $result['datapass'] = $data;
-            }
+    foreach ($grouped_results as $key => &$result) {
+        if(isset($dataToBePassed[$key])) {
+            $result['datapass'] = $dataToBePassed[$key];
         }
     }
+    unset($result);
 
     // Output the student list
     echo '<div class="mt-4">
@@ -130,14 +130,13 @@ if($action == 'loadstudent') {
         $qa_data = htmlspecialchars(json_encode($result['datapass']), ENT_QUOTES, 'UTF-8');
         
         echo '<tr>
-                <td><input type="checkbox" name="'.$result['user_id'].'_'.$result['quiz_id'].'" value="'.$result['user_id'].'_'.$result['quiz_id'].'"></td>
+                <td><input type="checkbox" name="students[]" value="'.$result['user_id'].'_'.$result['quiz_id'].'"></td>
                 <td>'.$result['firstname'].' '.$result['lastname'].'</td>
                 <td>'.$result['quiz_name'].'</td>
                 <td>'.($result['grade'] !== null ? format_float($result['grade'], 2) : '-').'</td>
                 <td class="generated-score">-</td>
                 <input type="hidden" 
                     class="qa-data" 
-                    name="students[]" 
                     id="'.$result['user_id'].'_'.$result['quiz_id'].'" 
                     value="'.$qa_data.'">
               </tr>';

@@ -61,5 +61,19 @@ function fetchScores() {
         return val.value
     });
 
-    console.log(studentCheckBoxes);
+    let itemData = [];
+    studentIds.forEach((id) => {
+        const hiddenInput = document.getElementById(id);
+        if (hiddenInput) {
+            try {
+                const data = JSON.parse(hiddenInput.value);
+                itemData.push(data);
+            } catch (e) {
+                console.error('Error parsing JSON for ID:', id, e);
+            }
+        }
+    });
+
+
+    console.log(itemData);
 }
