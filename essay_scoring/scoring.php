@@ -1,6 +1,7 @@
 <?php
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/quiz/lib.php');
+require_once($CFG->libdir.'/adminlib.php');
 
 // Get and validate course id
 $courseid = required_param('courseid', PARAM_INT);
@@ -10,6 +11,9 @@ $action = optional_param('action', '', PARAM_ALPHA);
 if (!$DB->record_exists('course', array('id' => $courseid))) {
     print_error('invalidcourseid', 'error');
 }
+
+$apiendpoint = get_config('block_essay_scoring', 'apiendpoint');
+$loadstudenttext = get_string('loadstudent', 'block_essay_scoring');
 
 // Setup page
 $course = get_course($courseid);
@@ -21,20 +25,16 @@ $PAGE->set_context($context);
 $PAGE->set_course($course);
 $PAGE->set_title(get_string('essayscoring', 'block_essay_scoring'));
 $PAGE->set_heading($course->fullname);
+$PAGE->requires->js("/blocks/essay_scoring/scoring.js");
 
-// Add necessary JavaScript
-$PAGE->requires->js('/blocks/essay_scoring/scoring.js');
-
-echo $OUTPUT->header();
-echo '<h2>' . get_string('essayscoring', 'block_essay_scoring') . '</h2>';
-
-// Display quiz selection form
 $quizzes = $DB->get_records('quiz', array('course' => $courseid));
+
+// Start page output
+echo $OUTPUT->header();
 
 if (empty($quizzes)) {
     echo '<div class="alert alert-info">No quizzes found in this course.</div>';
-} 
-else {
+} else {
     echo '<form id="quiz-selection-form">';
     echo '<div class="mb-3">';
     echo '<label><input type="checkbox" onclick="toggleCheckAll(this)"> Select All</label>';
@@ -49,18 +49,9 @@ else {
     }
     echo '</div>';
     
-    echo '<button type="button" class="btn btn-primary" onclick="fetchScores()">Check Scores</button>';
+    echo '<button type="button" class="btn btn-primary" onclick="loadStudent()">'.$loadstudenttext.'</button>';
     echo '</form>';
-    
-    echo '<div id="loading" style="display: none;" class="mt-3">';
-    echo '<div class="alert alert-info">Loading scores...</div>';
-    echo '</div>';
-    
-    echo '<div id="results" class="mt-3"></div>';
 }
 
+echo '<div id="student-list-container"></div>';
 echo $OUTPUT->footer();
-
-if ($action === 'fetch_scores') {
-    return json_decode("hehe");
-}

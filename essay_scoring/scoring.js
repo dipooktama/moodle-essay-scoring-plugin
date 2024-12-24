@@ -6,47 +6,60 @@ function toggleCheckAll(source) {
     }
 }
 
-function fetchScores() {
-    const checkboxes = document.getElementsByName('quizzes[]');
+async function loadStudent() {
+    const quizCheckBoxes = getCheckBoxes('quizzes[]');
+    console.log(quizCheckBoxes);
+    if(quizCheckBoxes.length === 0) {
+        alert('Please select at least one quiz');
+        return;
+    }
+    const quizIds = quizCheckBoxes.map((val) => {
+        return val.value
+    });
+    console.log(quizIds);
+    console.log(quizIds.join(','));
+
+    console.log("loading student...");
+    const host = window.location.origin;
+    let url = `${host}/blocks/essay_scoring/get_students.php?action=loadstudent&quiz=${quizIds.join(',')}`;
+    // let things = "";
+    // let res = await fetch(url);
+    // let resText = await res.text();
+    // console.log(resText);
+    // console.log("student loaded");
+    fetch(url).then(response => response.text())
+        .then(html => {
+            document.getElementById('student-list-container').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error: ', error);
+            alert(error);
+        });
+}
+
+function getCheckBoxes(elementName) {
+    const checkboxes = document.getElementsByName(elementName);
     const selectedQuizzes = [];
     
     for (let i = 0; i < checkboxes.length; i++) {
         if (checkboxes[i].checked) {
-            selectedQuizzes.push(checkboxes[i].value);
+            selectedQuizzes.push(checkboxes[i]);
         }
     }
 
-    if (selectedQuizzes.length === 0) {
-        alert('Please select at least one quiz');
+    return selectedQuizzes;
+}
+
+function fetchScores() {
+    const studentCheckBoxes = getCheckBoxes('students[]');
+    if(studentCheckBoxes.length === 0) {
+        alert('Please select at least one student');
         return;
     }
 
-    // Show loading, hide results
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
-
-    // Get the current URL (including courseid parameter)
-    const currentUrl = window.location.href;
-
-    // Create form data
-    const formData = new FormData();
-    formData.append('action', 'fetch_scores');
-    formData.append('quizzes', JSON.stringify(selectedQuizzes));
-
-    // Make the request
-    fetch(currentUrl, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(html => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('results').innerHTML = html;
-        document.getElementById('results').style.display = 'block';
-    })
-    .catch(error => {
-        document.getElementById('loading').style.display = 'none';
-        alert('Error fetching scores. Please try again.');
-        console.error('Error:', error);
+    const studentIds = studentCheckBoxes.map((val) => {
+        return val.value
     });
+
+    console.log(studentCheckBoxes);
 }
