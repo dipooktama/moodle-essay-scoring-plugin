@@ -12,100 +12,90 @@ if($action == 'loadstudent') {
     $students = array();
 
     $sql = 
-        "WITH ranked_steps AS (
-            SELECT
-                qas.questionattemptid,
-                qas.fraction,
-                ROW_NUMBER() OVER (
-                    PARTITION BY qas.questionattemptid
-                    ORDER BY 
-                        CASE 
-                            WHEN qas.state = 'gradedright' THEN 1
-                            WHEN qas.state = 'gradedwrong' THEN 2
-                            ELSE 3 
-                        END
-                ) AS rank
-            FROM mdl_question_attempt_steps AS qas
-            WHERE qas.state IN ('gradedright', 'gradedwrong')
-        )
-        SELECT 
-            qa.id AS id,
-            qa.questionsummary AS question_text,
-            qa.responsesummary AS student_answer,
-            qa.rightanswer AS context,
-            qat.id,
-            qa.questionusageid,
-            qat.quiz AS quiz_id,
-            u.id AS user_id,
-            q.name AS quiz_name,
-            u.firstname AS firstname,
-            u.lastname AS lastname,
-            (rs.fraction * qs.maxmark) AS grade
-        FROM mdl_question_attempts AS qa 
-        JOIN mdl_quiz_slots AS qs ON qs.id = qa.slot 
-        JOIN mdl_quiz_attempts AS qat ON qa.questionusageid = qat.id
-        JOIN mdl_quiz AS q ON qat.quiz = q.id
-        JOIN mdl_user AS u ON qat.userid = u.id 
-        JOIN ranked_steps AS rs ON rs.questionattemptid = qa.id AND rs.rank = 1
-        WHERE qat.quiz IN (" . implode(',', array_map('intval', $quiz_array)) . ")
-        ORDER BY qat.id, u.username, qa.slot;";
+        "SELECT 
+    qa.id AS id,
+    qa.questionsummary AS question_text,
+    qa.responsesummary AS student_answer,
+    qa.rightanswer AS context,
+    qat.id,
+    qa.questionusageid,
+    qat.quiz AS quiz_id,
+    u.id AS user_id,
+    q.name AS quiz_name,
+    u.firstname AS firstname,
+    u.lastname AS lastname,
+    qas.state AS graded_state,
+    (qas.fraction * qs.maxmark) AS grade
+FROM mdl_question_attempts AS qa 
+JOIN mdl_quiz_slots AS qs ON qs.slot = qa.slot 
+JOIN mdl_quiz_attempts AS qat ON qa.questionusageid = qat.id
+JOIN mdl_quiz AS q ON qat.quiz = q.id
+JOIN mdl_user AS u ON qat.userid = u.id 
+JOIN mdl_question_attempt_steps AS qas ON qas.questionattemptid = qa.id
+WHERE qat.quiz IN (" . implode(',', array_map('intval', $quiz_array)) . ")
+AND qas.state IN ('gradedright', 'gradedwrong')
+ORDER BY qat.id, u.username, qa.slot;";
 
 
-    $results = $DB->get_records_sql($sql);
+    $queryResults = $DB->get_records_sql($sql);
 
-    if (empty($results)) {
+    if (empty($queryResults)) {
         echo '<div class="alert alert-info">No students found for the selected quizzes.</div>';
         die();
     }
 
-    // Group results by student and quiz
-    $grouped_results = array();
-    foreach ($results as $result) {
-        $key = $result->user_id . '_' . $result->quiz_id;
-        if (!isset($grouped_results[$key])) {
-            $grouped_results[$key] = array(
-                'user_id' => $result->user_id,
-                'firstname' => $result->firstname,
-                'lastname' => $result->lastname,
-                'quiz_id' => $result->id,
-                'quiz_name' => $result->quiz_name,
-                'grade' => $result->grade,
-                'questions' => array()
-            );
-        }
-        $grouped_results[$key]['questions'][] = array(
-            'question' => $result->question_text,
-            'answer' => $result->student_answer,
-            'context' => $result->context
-        );
-    }
-
-    $dataToBePassed = array();
-    foreach ($grouped_results as $key => $data) {
-        if (!isset($dataToBePassed[$key])) {
-            $dataToBePassed[$key] = array(
-                'quiz_id' => $data['quiz_id'],
-                'user_id' => $data['user_id'],
-                'context' => '',
-                'questions_answers' => array()
+    function processQuizResults(array $results): array {
+        $processed = [];
+     
+        foreach ($results as $result) {
+            $key = $result->user_id . '_' . $result->quiz_id;
+        
+            // Initialize group if doesn't exist
+            if (!isset($processed[$key])) {
+                $processed[$key] = [
+                    'user_id' => $result->user_id,
+                    'firstname' => $result->firstname,
+                    'lastname' => $result->lastname,
+                    'quiz_id' => $result->quiz_id,
+                    'quiz_name' => $result->quiz_name,
+                    'grade' => $result->grade,
+                    'questions' => [],
+                    'datapass' => [
+                        'quiz_id' => $result->quiz_id,
+                        'user_id' => $result->user_id,
+                        'context' => '',
+                        'questions_answers' => []
+                    ]
+                ];
+            }
+        
+            // Add question data
+            $question = [
+                'question' => $result->question_text,
+                'answer' => $result->student_answer,
+                'context' => $result->context
+            ];
+        
+            // Update main questions array
+            $processed[$key]['questions'][] = $question;
+        
+            // Update datapass simultaneously
+            $processed[$key]['datapass']['questions_answers'][] = [
+                'question' => $result->question_text,
+                'answer' => $result->student_answer
+            ];
+        
+            // Append context (with proper spacing)
+            $processed[$key]['datapass']['context'] = trim(
+                $processed[$key]['datapass']['context'] . "\n" . $result->context
             );
         }
     
-        foreach($data['questions'] as $item) {
-            $dataToBePassed[$key]['questions_answers'][] = array(
-                'question' => $item['question'],
-                'answer' => $item['answer']
-            );
-            $dataToBePassed[$key]['context'] .= "\n" . $item['context'];
-        }
+        return $processed;
     }
 
-    foreach ($grouped_results as $key => &$result) {
-        if(isset($dataToBePassed[$key])) {
-            $result['datapass'] = $dataToBePassed[$key];
-        }
-    }
-    unset($result);
+    // Group results by student and quiz
+    $grouped_results = processQuizResults($queryResults);
 
     // Output the student list
     echo '<div class="mt-4">
@@ -128,6 +118,7 @@ if($action == 'loadstudent') {
     foreach ($grouped_results as $key => $result) {
         // Create hidden input with JSON-encoded question and answer data
         $qa_data = htmlspecialchars(json_encode($result['datapass']), ENT_QUOTES, 'UTF-8');
+        $tes_data = htmlspecialchars(json_encode($result), ENT_QUOTES, 'UTF-8');
         
         echo '<tr>
                 <td><input type="checkbox" name="students[]" value="'.$result['user_id'].'_'.$result['quiz_id'].'"></td>
@@ -139,6 +130,7 @@ if($action == 'loadstudent') {
                     class="qa-data" 
                     id="'.$result['user_id'].'_'.$result['quiz_id'].'" 
                     value="'.$qa_data.'">
+                <input type="hidden" name="test" value="'.$tes_data.'">
               </tr>';
     }
     
@@ -154,6 +146,10 @@ if($action == 'loadstudent') {
                 </div>
             </div>
         </div>';
+
+    
+    $res_data = htmlspecialchars(json_encode($queryResults), ENT_QUOTES, 'UTF-8');
+    echo '<p>'.$res_data.'</p>';
         
     // Add JavaScript for toggling student checkboxes
     echo '<script>
