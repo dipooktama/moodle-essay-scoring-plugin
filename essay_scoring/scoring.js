@@ -9,7 +9,7 @@ function toggleCheckAll(source) {
 async function loadStudent() {
     const quizCheckBoxes = getCheckBoxes('quizzes[]');
     console.log(quizCheckBoxes);
-    if(quizCheckBoxes.length === 0) {
+    if (quizCheckBoxes.length === 0) {
         alert('Please select at least one quiz');
         return;
     }
@@ -40,7 +40,7 @@ async function loadStudent() {
 function getCheckBoxes(elementName) {
     const checkboxes = document.getElementsByName(elementName);
     const selectedQuizzes = [];
-    
+
     for (let i = 0; i < checkboxes.length; i++) {
         if (checkboxes[i].checked) {
             selectedQuizzes.push(checkboxes[i]);
@@ -50,9 +50,9 @@ function getCheckBoxes(elementName) {
     return selectedQuizzes;
 }
 
-function fetchScores() {
+async function fetchScores() {
     const studentCheckBoxes = getCheckBoxes('students[]');
-    if(studentCheckBoxes.length === 0) {
+    if (studentCheckBoxes.length === 0) {
         alert('Please select at least one student');
         return;
     }
@@ -63,17 +63,32 @@ function fetchScores() {
 
     let itemData = [];
     studentIds.forEach((id) => {
-        const hiddenInput = document.getElementById(id);
+        const hiddenInput = document.getElementById("data_" + id);
         if (hiddenInput) {
             try {
-                const data = JSON.parse(hiddenInput.value);
-                itemData.push(data);
+                const data = hiddenInput.value;
+                itemData.push(JSON.parse(data));
             } catch (e) {
                 console.error('Error parsing JSON for ID:', id, e);
             }
         }
     });
 
+    console.log("getting endpoint...");
+    const host = window.location.origin;
+    let url = `${host}/blocks/essay_scoring/get_endpoint.php`;
+    let endpoint = await fetch(url).then(result => { return result.text(); });
+    // console.log(endpoint);
 
-    console.log(itemData);
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemData)
+    })
+        .then(data => {
+            let studentListHTML = document.getElementsByClassName('generated_score');
+            console.log(data);
+        })
 }

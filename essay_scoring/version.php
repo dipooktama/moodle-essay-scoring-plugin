@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_essay_scoring';
 $plugin->release = '0.1.1';
-$plugin->version = 2024122357;
+$plugin->version = 2024122371;
 $plugin->requires = 2022112800;
 $plugin->maturity = MATURITY_ALPHA;
