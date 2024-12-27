@@ -6,6 +6,30 @@ function toggleCheckAll(source) {
     }
 }
 
+const dialog = document.getElementById('attribution');
+const openDialogBtn = document.getElementById('openAttribution');
+const closeDialogBtn = document.getElementById('closeAttribution');
+
+openDialogBtn.addEventListener('click', () => {
+    dialog.showModal();
+});
+
+closeDialogBtn.addEventListener('click', () => {
+    dialog.close();
+});
+
+dialog.addEventListener('click', (event) => {
+    const rect = dialog.getBoundingClientRect();
+    if (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+    ) {
+        dialog.close();
+    }
+});
+
 async function loadStudent() {
     const quizCheckBoxes = getCheckBoxes('quizzes[]');
     console.log(quizCheckBoxes);

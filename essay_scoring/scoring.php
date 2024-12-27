@@ -14,6 +14,7 @@ if (!$DB->record_exists('course', array('id' => $courseid))) {
 
 $apiendpoint = get_config('block_essay_scoring', 'apiendpoint');
 $loadstudenttext = get_string('loadstudent', 'block_essay_scoring');
+$attribution = get_string('attribution', 'block_essay_scoring');
 
 // Setup page
 $course = get_course($courseid);
@@ -50,8 +51,22 @@ if (empty($quizzes)) {
     echo '</div>';
     
     echo '<button type="button" class="btn btn-primary" onclick="loadStudent()">'.$loadstudenttext.'</button>';
+    echo '<button type="button" id="openAttribution" class="btn btn-secondary">'.$attribution.'</button>';
     echo '</form>';
 }
 
 echo '<div id="student-list-container"></div>';
+echo '<dialog id="attribution">
+        <button id="closeAttribution" class="close-btn" aria-label="Close">&times;</button>
+        <h2>'.$attribution.'</h2>
+        <p><strong>Model:</strong> IndoBERT-ExamQA</p>
+        <p><strong>Research:</strong> DRTPM Research 2023</p>
+        <p><strong>Authors:</strong></p>
+        <ul>
+            <li>Dr. Amalia, ST, MT</li>
+            <li>Dr. Maya Silvi Lydia, B.Sc, M.Sc</li>
+            <li>Fuzy Yustika Damanik, S.Kom, M.Kom</li>
+        </ul>
+        <p><strong>Student Author:</strong> Sinu</p>
+    </dialog>';
 echo $OUTPUT->footer();

@@ -42,3 +42,4 @@ $string['quiz'] = 'Quiz';
 $string['scorecurrent'] = 'Current Score';
 $string['scoregenerated'] = 'Generated Score';
 $string['generatescore'] = 'Automate Scoring';
+$string['attribution'] = 'Attribution';
