@@ -175,7 +175,9 @@ if ($action == 'loadstudent') {
                 <td>' . $result['firstname'] . ' ' . $result['lastname'] . '</td>
                 <td>' . $result['quiz_name'] . '</td>
                 <td>' . ($result['grade'] !== null ? format_float($result['grade'], 2) : '-') . '</td>
-                <td class="generated-score" id="' . $id . '">-</td>
+                <td>
+                    <input type="text" class="generated-score" id="' . $id . '" value="0">
+                </td>
                 <input type="hidden" 
                     class="qa-data" 
                     id="data_' . $id . '" 

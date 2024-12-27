@@ -56,11 +56,9 @@ async function fetchScores() {
         alert('Please select at least one student');
         return;
     }
-
     const studentIds = studentCheckBoxes.map((val) => {
         return val.value
     });
-
     let itemData = [];
     studentIds.forEach((id) => {
         const hiddenInput = document.getElementById("data_" + id);
@@ -73,12 +71,10 @@ async function fetchScores() {
             }
         }
     });
-
     console.log("getting endpoint...");
     const host = window.location.origin;
     let url = `${host}/blocks/essay_scoring/get_endpoint.php`;
     let endpoint = await fetch(url).then(result => { return result.text(); });
-    // console.log(endpoint);
 
     fetch(endpoint, {
         method: 'POST',
@@ -87,8 +83,24 @@ async function fetchScores() {
         },
         body: JSON.stringify(itemData)
     })
+        .then(response => response.json())  // Parse the JSON response
         .then(data => {
-            let studentListHTML = document.getElementsByClassName('generated_score');
-            console.log(data);
+            console.log('Response data:', data);
+            data.forEach(dt => {  // Note: forEach, not foreach
+                const elementId = `score_${dt.user_id}_${dt.quiz_id}`;
+                const element = document.getElementById(elementId);
+                if (element) {
+                    // Check if summary exists and has average_score
+                    if (dt.summary && typeof dt.summary.average_score === 'number') {
+                        element.value = dt.summary.average_score.toFixed(2);
+                    }
+                } else {
+                    console.log(`Element with ID ${elementId} not found`);
+                }
+            });
         })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while generating scores');
+        });
 }
