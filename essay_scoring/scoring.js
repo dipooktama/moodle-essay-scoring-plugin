@@ -50,6 +50,20 @@ function getCheckBoxes(elementName) {
     return selectedQuizzes;
 }
 
+function toggleScoreDetails(userId, quizId) {
+    const detailsId = `details_${userId}_${quizId}`;
+    const detailsElement = document.getElementById(detailsId);
+    const iconElement = document.getElementById(`icon_${userId}_${quizId}`);
+    
+    if (detailsElement.style.display === 'none') {
+        detailsElement.style.display = 'table-row';
+        iconElement.classList.replace('fa-chevron-down', 'fa-chevron-up');
+    } else {
+        detailsElement.style.display = 'none';
+        iconElement.classList.replace('fa-chevron-up', 'fa-chevron-down');
+    }
+}
+
 async function fetchScores() {
     const studentCheckBoxes = getCheckBoxes('students[]');
     if (studentCheckBoxes.length === 0) {
@@ -87,12 +101,22 @@ async function fetchScores() {
         .then(data => {
             console.log('Response data:', data);
             data.forEach(dt => {  // Note: forEach, not foreach
-                const elementId = `score_${dt.user_id}_${dt.quiz_id}`;
+                const elementId = `${dt.user_id}_${dt.quiz_id}`;
                 const element = document.getElementById(elementId);
                 if (element) {
                     // Check if summary exists and has average_score
                     if (dt.summary && typeof dt.summary.average_score === 'number') {
                         element.value = dt.summary.average_score.toFixed(2);
+                    }
+
+                    // Update individual question scores
+                    if (dt.results) {
+                        dt.results.forEach((result, index) => {
+                            const scoreElement = document.getElementById(`score_${elementId}_${index}`);
+                            if (scoreElement && typeof result.score === 'number') {
+                                scoreElement.textContent = result.score.toFixed(2);
+                            }
+                        });
                     }
                 } else {
                     console.log(`Element with ID ${elementId} not found`);

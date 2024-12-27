@@ -122,7 +122,8 @@ if ($action == 'loadstudent') {
             $question = [
                 'question' => $result->question_text,
                 'answer' => $result->student_answer,
-                'context' => $result->context
+                'context' => $result->context,
+                'grade' => $result->grade
             ];
 
             // Update main questions array
@@ -176,13 +177,47 @@ if ($action == 'loadstudent') {
                 <td>' . $result['quiz_name'] . '</td>
                 <td>' . ($result['grade'] !== null ? format_float($result['grade'], 2) : '-') . '</td>
                 <td>
-                    <input type="text" class="generated-score" id="' . $id . '" value="0">
+                    <div class="score-container">
+                        <input type="text" class="generated-score" id="' . $id . '" value="0">
+                        <button type="button" class="btn btn-link btn-sm" onclick="toggleScoreDetails(\'' . $result['user_id'] . '\', \'' . $result['quiz_id'] . '\')">
+                            <i id="icon_' . $id . '" class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
                 </td>
                 <input type="hidden" 
                     class="qa-data" 
                     id="data_' . $id . '" 
                     value="' . $qa_data . '">
               </tr>';
+
+        // Detail row (hidden by default)
+        echo '<tr id="details_' . $id . '" class="detail-row" style="display: none;">
+                <td colspan="5">
+                    <div class="score-details-content">
+                        <table class="table table-sm detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Student\'s Answer</th>
+                                    <th width="100">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>';
+    
+        // Render questions and answers
+        foreach ($result['questions'] as $index => $qa) {
+            echo '<tr>
+                                    <td>' . htmlspecialchars($qa['question']) . '</td>
+                                    <td>' . htmlspecialchars($qa['answer']) . '</td>
+                                    <td class="text-center"><span id="score_' . $id . '_' . $index . '">-</span></td>
+                                </tr>';
+        }
+    
+        echo '</tbody>
+                </table>
+                </div>
+                </td>
+                </tr>';
     }
 
     echo '</tbody>
@@ -197,10 +232,6 @@ if ($action == 'loadstudent') {
                 </div>
             </div>
         </div>';
-
-
-    $res_data = htmlspecialchars(json_encode($queryResults), ENT_QUOTES, 'UTF-8');
-    echo '<p>' . $res_data . '</p>';
 
     // Add JavaScript for toggling student checkboxes
     echo '<script>
